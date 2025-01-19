@@ -26,12 +26,12 @@ public:
     void set_team       (int team     ) {_team      = team      ; }
     void set_id         (int id       ) {_id        = id        ; }
     // 输出6个参数的值
-    int get_max_blood() {return _max_blood; }
-    int get_max_heat () {return _max_heat ; }
-    int get_blood    () {return _blood    ; }
-    int get_heat     () {return _heat     ; }
-    int get_team     () {return _team     ; }
-    int get_id       () {return _id       ; }
+    int get_max_blood() const { return _max_blood; }
+    int get_max_heat () const { return _max_heat ; }
+    int get_blood    () const { return _blood    ; }
+    int get_heat     () const { return _heat     ; }
+    int get_team     () const { return _team     ; }
+    int get_id       () const { return _id       ; }
 };
 
 // 步兵子类
@@ -95,7 +95,7 @@ private:
     // 按照reduce_blood的值从小到大有序储存在同一段机器人枪口热量降低的时间内被摧毁的机器人
     std::map<int,std::pair<int,int>> reduce_heat_destroyed;
 
-    bool whether_Engineer(int max_heat) // 判断是否为工程
+    static bool whether_Engineer(int max_heat) // 判断是否为工程
     {
         switch (max_heat)
         {
@@ -105,7 +105,7 @@ private:
                 return false;
         }
     }
-    void add_new_robot(std::shared_ptr<Robot> robot)
+    void add_new_robot(const std::shared_ptr<Robot>& robot)
     {
         robots.push_back(robot); // 加入到所有机器人数组
         working.push_back(robot); // 加入到正常机器人列表
@@ -175,13 +175,13 @@ public:
             {
                 if ( (*it)->get_heat() > (*it)->get_max_heat() ) // 机器人热量大于热量上限
                 {
-                    bool flag=0; // 判断血量下降的方式（初始：在时间结束时机器人热量未减小到最大热量）
+                    bool flag=false; // 判断血量下降的方式（初始：在时间结束时机器人热量未减小到最大热量）
                     int reduce_blood; // 血量下降前(*it)->_blood的值，该值越小，机器人被摧毁越早，越早输出
                     if ( (*it)->get_heat() - (*it)->get_max_heat() <= time ) // 在时间结束前或时间结束时恰好机器人热量减小到最大热量
                     {
                         // 每秒钟造成1点伤害
                         (*it)->set_blood ( (*it)->get_blood() - ( (*it)->get_heat() - (*it)->get_max_heat() ) ) ;
-                        flag=1; // 判断血量下降的方式切换为：在时间结束前或时间结束时恰好机器人热量减小到最大热量
+                        flag=true; // 判断血量下降的方式切换为：在时间结束前或时间结束时恰好机器人热量减小到最大热量
                     }
                     else // 在时间结束时机器人热量未减小到最大热量，判断血量下降的方式不变
                         (*it)->set_blood ( (*it)->get_blood() - time ) ; // 每秒钟造成1点伤害，共time点
@@ -221,9 +221,8 @@ public:
         }
         if (!reduce_heat_destroyed.empty()) // 在同一段机器人枪口热量降低的时间内存在被摧毁的机器人
         {
-            // 遍历在同一段机器人枪口热量降低的时间内被摧毁的机器人
-            for (auto it=reduce_heat_destroyed.begin();it!=reduce_heat_destroyed.end();it++)
-                std::cout<<"D "<<it->second.first<<' '<<it->second.second<<std::endl; // 输出：D 所属队伍 机器人标识符
+            for (auto & it : reduce_heat_destroyed) // 遍历在同一段机器人枪口热量降低的时间内被摧毁的机器人
+                std::cout<<"D "<<it.second.first<<' '<<it.second.second<<std::endl; // 输出：D 所属队伍 机器人标识符
             reduce_heat_destroyed.clear(); // 清空在同一段机器人枪口热量降低的时间内被摧毁的机器人
         }
     }
